@@ -1,0 +1,19 @@
+[project]
+name = "submission-frontend"
+version = "0.1.0"
+description = "Manager dashboard frontend for ambient-expense-agent approvals"
+authors = [
+    {name = "Your Name", email = "your@email.com"},
+]
+dependencies = [
+    "fastapi>=0.110.0",
+    "uvicorn>=0.29.0",
+    "google-adk[gcp]>=2.0.0,<3.0.0",
+    "google-cloud-aiplatform>=1.156.0",
+    "httpx>=0.27.0",
+]
+requires-python = ">=3.11,<3.14"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
