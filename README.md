@@ -48,7 +48,7 @@ sequenceDiagram
 
 ### 1. Prerequisites
 Ensure you have the following CLI tools installed:
-* [uv](https://docs.astral.sh/uv/) (Astral's fast Python packaging tool)
+* [uv](https://docs.astral.sh/uv/) (Astral's fast Python packaging tool). Setup: `uv sync` — installs the Python pinned in `.python-version` and the locked dependencies.
 * [google-agents-cli](https://github.com/google-gemini/google-agents-cli) (Install via `uv tool install google-agents-cli`)
 * [gcloud CLI](https://cloud.google.com/sdk/docs/install) (Authenticated and configured to your active GCP project)
 
