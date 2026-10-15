@@ -1,6 +1,7 @@
 import json
 import sys
 from pathlib import Path
+from typing import Any
 
 # Add project root to Python path
 sys.path.append(str(Path(__file__).resolve().parents[2]))
@@ -36,7 +37,7 @@ def safe_json_serialize(obj):
 
 def serialize_event(event: Event) -> dict:
     """Helper to convert an Event model to a JSON-serializable dict."""
-    d = {
+    d: dict[str, Any] = {
         "author": event.author,
     }
 
@@ -65,8 +66,9 @@ def run_case(case: dict) -> dict:
     session = session_service.create_session_sync(
         user_id="test_user", app_name="expense_agent"
     )
+    # root_agent is a Workflow (a BaseNode, not a BaseAgent): Runner takes it via `node=`.
     runner = Runner(
-        agent=root_agent, session_service=session_service, app_name="expense_agent"
+        node=root_agent, session_service=session_service, app_name="expense_agent"
     )
 
     # Extract raw prompt message
@@ -86,7 +88,7 @@ def run_case(case: dict) -> dict:
             for part in event.content.parts:
                 func_call = part.function_call or getattr(part, "functionCall", None)
                 if func_call and func_call.name == "adk_request_input":
-                    args = func_call.args
+                    args = func_call.args or {}
                     interrupt_id = args.get("interruptId") or args.get("interrupt_id")
                     interrupt_message = args.get("message")
                     break
