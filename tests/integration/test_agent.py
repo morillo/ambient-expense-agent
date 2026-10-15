@@ -28,7 +28,7 @@ def test_auto_approve_flow() -> None:
     """Tests that low-value expenses (< $100) are automatically approved without an LLM."""
     session_service = InMemorySessionService()
     session = session_service.create_session_sync(user_id="test_user", app_name="test")
-    runner = Runner(agent=root_agent, session_service=session_service, app_name="test")
+    runner = Runner(node=root_agent,session_service=session_service, app_name="test")
 
     payload = {
         "data": {
@@ -92,7 +92,7 @@ def test_high_value_expense_hitl_pause() -> None:
             user_id="test_user", app_name="test"
         )
         runner = Runner(
-            agent=root_agent, session_service=session_service, app_name="test"
+            node=root_agent, session_service=session_service, app_name="test"
         )
 
         payload = {
@@ -129,7 +129,7 @@ def test_high_value_expense_hitl_pause() -> None:
                         and part.function_call.name == "adk_request_input"
                     ):
                         request_input_event = event
-                        args = part.function_call.args
+                        args = part.function_call.args or {}
                         interrupt_id = args.get("interruptId")
                         message_text = args.get("message")
                         break
@@ -160,7 +160,7 @@ def test_security_checkpoint_pii_redaction() -> None:
             user_id="test_user", app_name="test"
         )
         runner = Runner(
-            agent=root_agent, session_service=session_service, app_name="test"
+            node=root_agent, session_service=session_service, app_name="test"
         )
 
         payload = {
@@ -208,7 +208,7 @@ def test_security_checkpoint_prompt_injection() -> None:
             user_id="test_user", app_name="test"
         )
         runner = Runner(
-            agent=root_agent, session_service=session_service, app_name="test"
+            node=root_agent, session_service=session_service, app_name="test"
         )
 
         payload = {
@@ -247,7 +247,7 @@ def test_security_checkpoint_prompt_injection() -> None:
                         and part.function_call.name == "adk_request_input"
                     ):
                         request_input_event = event
-                        message_text = part.function_call.args.get("message")
+                        message_text = (part.function_call.args or {}).get("message")
                         break
 
         assert request_input_event is not None

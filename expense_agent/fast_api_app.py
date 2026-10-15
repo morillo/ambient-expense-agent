@@ -113,8 +113,10 @@ def get_api_server(app_instance: FastAPI):
     runners and active session services correctly.
     """
     for route in app_instance.routes:
-        if hasattr(route, "endpoint") and hasattr(route.endpoint, "__closure__"):
-            closure = route.endpoint.__closure__
+        # Only starlette.routing.Route has `endpoint`; BaseRoute (Mount etc.) does not.
+        endpoint = getattr(route, "endpoint", None)
+        if endpoint is not None and hasattr(endpoint, "__closure__"):
+            closure = endpoint.__closure__
             if isinstance(closure, tuple):
                 for cell in closure:
                     try:

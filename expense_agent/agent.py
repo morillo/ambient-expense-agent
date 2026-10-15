@@ -16,7 +16,7 @@ import base64
 import json
 import os
 import re
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Iterator
 from typing import Any
 
 import google.auth
@@ -25,6 +25,7 @@ from google.adk.agents import LlmAgent
 from google.adk.agents.context import Context
 from google.adk.apps import App
 from google.adk.events.event import Event
+from google.adk.events.event_actions import EventActions
 from google.adk.events.request_input import RequestInput
 from google.adk.models import Gemini
 from google.adk.workflow import START, Workflow, node
@@ -161,11 +162,14 @@ def parse_expense(node_input: ExpenseEvent) -> Event:
         route = "security_checkpoint"
 
     # Store structured expense in workflow state and pass it down
-    return Event(output=expense, route=route, state={"expense": expense.model_dump()})
+    return Event(
+        output=expense,
+        actions=EventActions(route=route, state_delta={"expense": expense.model_dump()}),
+    )
 
 
 @node
-def auto_approve(node_input: ExpenseReport) -> AsyncGenerator[Event, None]:
+def auto_approve(node_input: ExpenseReport) -> Iterator[Event]:
     """Deterministically auto-approves low-value expenses without calling the LLM."""
     result = ExpenseResult(
         amount=node_input.amount,
@@ -251,16 +255,14 @@ def security_checkpoint(ctx: Context, node_input: ExpenseReport) -> Event:
         )
         return Event(
             output=mock_assessment,
-            route="flagged_human_review",
-            state=state_update,
+            actions=EventActions(route="flagged_human_review", state_delta=state_update),
         )
     else:
         # Clean: continue to risk_review (LLM)
         # Output the clean sanitized expense
         return Event(
             output=sanitized_expense,
-            route="risk_review",
-            state=state_update,
+            actions=EventActions(route="risk_review", state_delta=state_update),
         )
 
 
@@ -307,6 +309,9 @@ async def human_review(
         yield RequestInput(
             interrupt_id="decision",
             message=msg,
+            # ADK declares the default positionally (`Field(None, ...)`), which type
+            # checkers do not see as a default; passing it keeps the call typed.
+            response_schema=None,
         )
         return
 
